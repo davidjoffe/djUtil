@@ -2,6 +2,9 @@
 @rem NB this whole thing is meant to be lossless, so e.g. should preserve round-robin all image data, metadata and original file timestamps
 @echo off
 
+@rem set djMETADATA=y
+set djMETADATA=n
+
 rem Set the codepage to UTF-8
 chcp 65001
 
@@ -32,13 +35,16 @@ for /r %%f in (*.png) do (
 	@rem exiftool -overwrite_original_in_place -delete_original -r "%%i.jxl	
 	
 	@echo Copying metadata for: %%f
-	exiftool -tagsFromFile "%%f" -all:all "%%~nf.jxl"
-	@rem -b for binary data (e.g. Mac screenshots have binary data)
-	exiftool -all -b -s "%%f" > "%%~nf_metadata.txt"
-	exiftool -all -b -s -j "%%f" > "%%~nf_metadata.json"
-	@rem exiftool -overwrite_original_in_place -delete_original -r "%%f_metadata.jxl"
-	@rem Use ImageMagick to copy the metadata 
-	@rem convert "%%f" -set exif:all "%%f.jxl"
+	if "%djMETADATA%"=="y" (
+		exiftool -tagsFromFile "%%f" -all:all "%%~nf.jxl"
+		@rem -b for binary data (e.g. Mac screenshots have binary data)
+		exiftool -all -b -s "%%f" > "%%~nf_metadata.txt"
+		exiftool -all -b -s -j "%%f" > "%%~nf_metadata.json"
+
+		@rem exiftool -overwrite_original_in_place -delete_original -r "%%f_metadata.jxl"
+		@rem Use ImageMagick to copy the metadata 
+		@rem convert "%%f" -set exif:all "%%f.jxl"
+	)
 
 	@rem Call my helper to copy and preserve original file timestamps e.g. create date
 	call copytimestamps.bat "%%f" "%%~nf.jxl"
