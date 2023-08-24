@@ -3,7 +3,15 @@
 @echo off
 
 @rem set djMETADATA=y
-set djMETADATA=n
+set djMETADATA=y
+set djMETADATA_TEXT=n
+set djMETADATA_JSON=y
+@rem set djDISTANCE=1
+if "%1"=="" (
+	set djDISTANCE=0
+) else (
+	set djDISTANCE=%1
+)
 
 rem Set the codepage to UTF-8
 chcp 65001
@@ -15,7 +23,7 @@ rem Get a list of all PNG files in the current directory
 for /r %%f in (*.png) do (
 
 	rem Echo the filename
-	echo Converting %%f...
+	echo Converting "%%f" distance %djDISTANCE% to "%%~nf.jxl" ...
 	@echo filename only %%~nf
 
 	rem Keep the EXIF data in the JXL file
@@ -29,17 +37,21 @@ for /r %%f in (*.png) do (
 	@rem cjxl -d 0 -e 9 --set-option=exif=keep --set-option=utf8=1   "%%f" "%%f.jxl"
 	@rem cjxl -d 0 -e 1   "%%f" "%%f.jxl" --set-option=exif=copy
 	@rem -e compression effort, 9 means spend most time/CPU to get smallest file
-	cjxl -d 0 -e 9   "%%f" "%%~nf.jxl" 
+	cjxl -d %djDISTANCE% -e 9   "%%f" "%%~nf.jxl" 
 	
 	@rem exiftool -tagsFromFile "%%i" -all:all "%%i.jxl"
 	@rem exiftool -overwrite_original_in_place -delete_original -r "%%i.jxl	
 	
-	@echo Copying metadata for: %%f
 	if "%djMETADATA%"=="y" (
+		@echo Copying metadata for: %%f
 		exiftool -tagsFromFile "%%f" -all:all "%%~nf.jxl"
 		@rem -b for binary data (e.g. Mac screenshots have binary data)
-		exiftool -all -b -s "%%f" > "%%~nf_metadata.txt"
-		exiftool -all -b -s -j "%%f" > "%%~nf_metadata.json"
+		if "%djMETADATA_TEXT%"=="y" (
+			exiftool -all -b -s "%%f" > "%%~nf_metadata.txt"
+		)
+		if "%djMETADATA_JSON%"=="y" (
+			exiftool -all -b -s -j "%%f" > "%%~nf_metadata.json"
+		)
 
 		@rem exiftool -overwrite_original_in_place -delete_original -r "%%f_metadata.jxl"
 		@rem Use ImageMagick to copy the metadata 
@@ -48,11 +60,18 @@ for /r %%f in (*.png) do (
 
 	@rem Call my helper to copy and preserve original file timestamps e.g. create date
 	call copytimestamps.bat "%%f" "%%~nf.jxl"
-	call copytimestamps.bat "%%f" "%%~nf_metadata.txt"
-	call copytimestamps.bat "%%f" "%%~nf_metadata.json"
+	if "%djMETADATA%"=="y" (
+		if "%djMETADATA_TEXT%"=="y" (
+			call copytimestamps.bat "%%f" "%%~nf_metadata.txt"
+		)
+		if "%djMETADATA_JSON%"=="y" (
+			call copytimestamps.bat "%%f" "%%~nf_metadata.json"
+		)
+	)
 	
-	@echo ONE
+	@echo Done %%f
 	@rem exiftool
+	@echo ---------------------------------------------------------
 )
 
-echo Done!s
+echo Done! %curdir%
