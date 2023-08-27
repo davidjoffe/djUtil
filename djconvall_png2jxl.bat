@@ -3,7 +3,7 @@
 @rem (In theory this should work recursively also on folders, though use with caution - dj2023-08)
 @echo off
 
-setlocal delayedexpansion
+setlocal enabledelayedexpansion
 
 @rem set djMETADATA=y
 set djMETADATA=y
@@ -44,7 +44,7 @@ for /r %%f in (*.png) do (
 	@echo LOG filename only %%~nf, pathonly "%%~dpf", target "!djOUTFILE!"
 	
     rem Check for zero-byte input file and warn user
-    if %%~zf EQU 0 (
+    if %%~zf==0 (
         echo WARNING: EMPTY INPUT FILE WITH 0 BYTES SIZE "!djINFILE!"
     )
 
