@@ -14,4 +14,10 @@ Includes e.g. small simple helper scripts to losslessly batch convert all .png f
 * So e.g. calling 'all2jxl 0.95' will have very visually good images with some loss, but still good compression. Calling e.g. 'all2jxl 2.0' you may start to see some loss, which depending on your perfection level and usage/application may be tolerable)
 
 * NOTE: This does not delete the original PNG files, so you can re-run the process with different values and compare the results
+
+* Note that by default, it will attempt to save a copy of the original PNG metadata (e.g. EXIF metadata) to a separate file using exiftool. If you don't want all these files cluttering up your folders and don't want the metadata information, set this setting e.g. djMETADATA to 'n' near top of script.
   
+## Dependencies
+
+* libjxl (cjxl) for conversion
+* exiftool if you want to save metadata
