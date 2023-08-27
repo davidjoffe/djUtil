@@ -1,7 +1,10 @@
+@echo off
 @rem dj2023-08 helper to convert all .png files in current folder to jxl
 @rem NB this whole thing is meant to be lossless, so e.g. should preserve round-robin all image data, metadata and original file timestamps
 @rem (In theory this should work recursively also on folders, though use with caution - dj2023-08)
-@echo off
+
+@rem TODOs:
+@rem Note this stuff doesn't seem to properly copy e.g. Stable Diffusion 'Parameter' exif tags etc. - todo, see if there are exiftool flags we can use to force it, or try use other software eg ImageMagic
 
 setlocal enabledelayedexpansion
 
@@ -12,6 +15,7 @@ set djMETADATA_JSON=y
 set djNO_OVERWRITE_IFEXISTS=y
 
 @rem cjxl -e effort. By default maximum effort for best file size, lower this value for faster conversion
+@rem 9 means spend most time/CPU to get smallest file
 set djEFFORT=9
 @rem set djDISTANCE=1
 @rem cjxl -d distance. A distance of 0 means LOSSLESS compression
@@ -21,6 +25,11 @@ if "%1"=="" (
 ) else (
 	set djDISTANCE=%1
 )
+if "%2"=="" (
+	set djEFFORT=9
+) else (
+	set djEFFORT=%2
+)
 
 rem Set the codepage to UTF-8
 chcp 65001
@@ -28,17 +37,29 @@ chcp 65001
 rem Get the current directory
 set curdir=%cd%
 
+@echo ----------------------------------
+@echo SETTINGS:
+@echo djMETADATA=!djMETADATA!
+@echo djMETADATA_TEXT=!djMETADATA_TEXT!
+@echo djMETADATA_JSON=!djMETADATA_JSON!
+@echo djNO_OVERWRITE_IFEXISTS=!djNO_OVERWRITE_IFEXISTS!
+@echo djDISTANCE=!djDISTANCE!
+@echo djEFFORT=!djEFFORT!
+@echo FOLDER: !curdir!
+@echo ----------------------------------
+
 rem Get a list of all PNG files in the current directory
 for /r %%f in (*.png) do (
 	@rem Append filename to .png so we 
 	@rem Note this filename may have spaces in so when we use it we put quotes around it
 	@rem set djOUTFILE=%%~dpf%%~nf.png.jxl
 	set djINFILE=%%f
+	set djOUTFILE_MINUS_EXTENSION=%%~dpf%%~nf
 	@rem Full path and filename
 	set djOUTFILE=%%~dpf%%~nf.jxl
 
 	rem Echo the filename
-	@echo 
+	@echo ---------------
 	@echo ---------------
 	@echo CONVERTING !djINFILE! distance !djDISTANCE! to "%%~nf.jxl" ...
 	@echo LOG filename only %%~nf, pathonly "%%~dpf", target "!djOUTFILE!"
@@ -68,27 +89,25 @@ for /r %%f in (*.png) do (
 
 	@rem Check if file was created and try warn user if something went wrong
 	IF NOT EXIST "!djOUTFILE!" (
-		echo ERROR: OUTPUT FILE NOT CREATED: !djOUTFILE! (from !djINFILE!)
+		echo ERROR: OUTPUT FILE NOT CREATED: !djOUTFILE! from !djINFILE!
 	)
 
-
-
-	@rem -e compression effort, 9 means spend most time/CPU to get smallest file
-
-
-
+	@rem dj2023-08 NOTE this stuff doesn't seem to properly copy e.g. Stable Diffusion 'Parameter' exif tags etc.
 	@rem exiftool -tagsFromFile "%%i" -all:all "%%i.jxl"
 	@rem exiftool -overwrite_original_in_place -delete_original -r "%%i.jxl	
 	
-	if "%djMETADATA%"=="y" (
+	@echo DO METADATA !djMETADATA!
+	if "!djMETADATA!"=="y" (
 		@echo Copying metadata for: !djINFILE!
 		exiftool -tagsFromFile "!djINFILE!" -all:all "!djOUTFILE!"
 		@rem -b for binary data (e.g. Mac screenshots have binary data)
-		if "%djMETADATA_TEXT%"=="y" (
-			exiftool -all -b -s "!djINFILE!" > "%%~dpf%%~nf_metadata.txt"
+		if "!djMETADATA_TEXT!"=="y" (
+			@echo Trying to save metadata to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
+			exiftool -all -b -s "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
 		)
-		if "%djMETADATA_JSON%"=="y" (
-			exiftool -all -b -s -j "!djINFILE!" > "%%~dpf%%~nf_metadata.json"
+		if "!djMETADATA_JSON!"=="y" (
+			@echo Trying to save metadata to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
+			exiftool -all -b -s -j "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
 		)
 
 		@rem exiftool -overwrite_original_in_place -delete_original -r "!djINFILE!_metadata.jxl"
@@ -101,10 +120,12 @@ for /r %%f in (*.png) do (
 	call copytimestamps.bat "!djINFILE!" "!djOUTFILE!"
 	if "!djMETADATA!"=="y" (
 		if "!djMETADATA_TEXT!"=="y" (
-			call copytimestamps.bat "!djINFILE!" "%%~dpf%%~nf_metadata.txt"
+			@echo Copy timestamps to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
+			call copytimestamps.bat "!djINFILE!" "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
 		)
 		if "!djMETADATA_JSON!"=="y" (
-			call copytimestamps.bat "!djINFILE!" "%%~dpf%%~nf_metadata.json"
+			@echo Copy timestamps to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
+			call copytimestamps.bat "!djINFILE!" "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
 		)
 	)
 
