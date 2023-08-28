@@ -1,5 +1,5 @@
 @echo off
-@echo Small simple helper to convert all .png flies in current folder to webp
+@echo Small simple helper to convert all .png files in current folder to webp
 @echo Assumes cwebp is installed and available in path
 
 @REM setlocal enabledelayedexpansion
