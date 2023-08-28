@@ -9,8 +9,11 @@
 setlocal enabledelayedexpansion
 
 @rem set djMETADATA=y
+@echo djMETADATA setting controls whether or not to try transfer metadata from PNG to JXL. Requires exiftool
 set djMETADATA=y
+@echo djMETADATA_TEXT setting controls whether or not to save a copy of the PNG metadata to an extra .txt file during conversion alongside the created .jxl file and original png file. Requires exiftool
 set djMETADATA_TEXT=n
+@echo djMETADATA_JSON setting controls whether or not to save a copy of the PNG metadata to an extra .json file during conversion alongside the created .jxl file and original png file. Requires exiftool
 set djMETADATA_JSON=y
 set djNO_OVERWRITE_IFEXISTS=y
 
@@ -100,20 +103,20 @@ for /r %%f in (*.png) do (
 	if "!djMETADATA!"=="y" (
 		@echo Copying metadata for: !djINFILE!
 		exiftool -tagsFromFile "!djINFILE!" -all:all "!djOUTFILE!"
-		@rem -b for binary data (e.g. Mac screenshots have binary data)
-		if "!djMETADATA_TEXT!"=="y" (
-			@echo Trying to save metadata to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
-			exiftool -all -b -s "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
-		)
-		if "!djMETADATA_JSON!"=="y" (
-			@echo Trying to save metadata to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
-			exiftool -all -b -s -j "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
-		)
 
 		@rem exiftool -overwrite_original_in_place -delete_original -r "!djINFILE!_metadata.jxl"
 
 		@rem Alternative attempt to use ImageMagick to copy the metadata 
 		@rem convert "!djINFILE!" -set exif:all "!djOUTFILE!"
+	)
+	@rem -b for binary data (e.g. Mac screenshots have binary data)
+	if "!djMETADATA_TEXT!"=="y" (
+		@echo Trying to save metadata to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
+		exiftool -all -b -s "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.txt"
+	)
+	if "!djMETADATA_JSON!"=="y" (
+		@echo Trying to save metadata to "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
+		exiftool -all -b -s -j "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
 	)
 
 	@rem Call my helper to copy and preserve original file timestamps e.g. create date
@@ -134,4 +137,4 @@ for /r %%f in (*.png) do (
 	@echo ---------------------------------------------------------
 )
 
-echo Done! !curdir!
+echo DONE !curdir!
