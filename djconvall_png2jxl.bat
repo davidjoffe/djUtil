@@ -6,7 +6,10 @@
 @rem TODOs:
 @rem Note this stuff doesn't seem to properly copy e.g. Stable Diffusion 'Parameter' exif tags etc. - todo, see if there are exiftool flags we can use to force it, or try use other software eg ImageMagic
 
-setlocal enabledelayedexpansion
+rem Set the codepage to UTF-8
+chcp 65001
+
+@rem setlocal enabledelayedexpansion
 
 @rem set djMETADATA=y
 @echo djMETADATA setting controls whether or not to try transfer metadata from PNG to JXL. Requires exiftool
@@ -16,6 +19,9 @@ set djMETADATA_TEXT=n
 @echo djMETADATA_JSON setting controls whether or not to save a copy of the PNG metadata to an extra .json file during conversion alongside the created .jxl file and original png file. Requires exiftool
 set djMETADATA_JSON=y
 set djNO_OVERWRITE_IFEXISTS=y
+
+@rem If 'y' makes the output extension .png.jxl (in case you want to know later it came from that original png), otherwise just .jxl
+set djAPPENDEXTENSION=n
 
 @rem cjxl -e effort. By default maximum effort for best file size, lower this value for faster conversion
 @rem 9 means spend most time/CPU to get smallest file
@@ -34,38 +40,89 @@ if "%2"=="" (
 	set djEFFORT=%2
 )
 
-rem Set the codepage to UTF-8
-chcp 65001
-
 rem Get the current directory
 set curdir=%cd%
 
 @echo ----------------------------------
 @echo SETTINGS:
-@echo djMETADATA=!djMETADATA!
-@echo djMETADATA_TEXT=!djMETADATA_TEXT!
-@echo djMETADATA_JSON=!djMETADATA_JSON!
-@echo djNO_OVERWRITE_IFEXISTS=!djNO_OVERWRITE_IFEXISTS!
-@echo djDISTANCE=!djDISTANCE!
-@echo djEFFORT=!djEFFORT!
-@echo FOLDER: !curdir!
+@echo djMETADATA=%djMETADATA%
+@echo djMETADATA_TEXT=%djMETADATA_TEXT%
+@echo djMETADATA_JSON=%djMETADATA_JSON%
+@echo djNO_OVERWRITE_IFEXISTS=%djNO_OVERWRITE_IFEXISTS%
+@echo djDISTANCE=%djDISTANCE%
+@echo djEFFORT=%djEFFORT%
+@echo FOLDER: %curdir%
 @echo ----------------------------------
+pause
+
+@echo off
+@rem setlocal  enabledelayedexpansion
+@rem endlocal
+
+@echo --------------- show list of files to do
+for /r %%f in (*.png) do (
+	@rem echo echooooooo %%f 
+	@rem Weird kludges to work around exclamation issues, H/T https://stackoverflow.com/questions/36336518/issue-with-special-characters-in-path-exclamation-point-carrot-etc-using - dj2023-08
+	set FILENAME=%%f
+	setlocal enabledelayedexpansion
+    for %%I in ("!FILENAME!") do endlocal & set djINFILE=%%~I
+	if "%djAPPENDEXTENSION%"=="y" (
+		setlocal enabledelayedexpansion
+		for %%I in ("!FILENAME!") do endlocal & set djOUTFILE=%%~dpI%%~nI.png.jxl
+	) else (
+		setlocal enabledelayedexpansion
+		for %%I in ("!FILENAME!") do endlocal & set djOUTFILE=%%~dpI%%~nI.jxl
+	)
+	@rem call set /P djOUTFILE_MINUS_EXTENSION=%%~dpf%%~nf<NUL & echo;
+	setlocal enabledelayedexpansion
+    @rem for %%I in ("!FILENAME!") do endlocal & set djOUTFILE_MINUS_EXTENSION=%%~dpI%%~nI& echo(___%%I
+	for %%I in ("!FILENAME!") do endlocal & set djOUTFILE_MINUS_EXTENSION=%%~dpI%%~nI
+
+	setlocal  enabledelayedexpansion
+	echo CONVERT: "!djINFILE!"
+	echo TO FILE: "!djOUTFILE!"
+	endlocal
+)
+pause
+
+
 
 rem Get a list of all PNG files in the current directory
 for /r %%f in (*.png) do (
-	@rem Append filename to .png so we 
 	@rem Note this filename may have spaces in so when we use it we put quotes around it
 	@rem set djOUTFILE=%%~dpf%%~nf.png.jxl
-	set djINFILE=%%f
-	set djOUTFILE_MINUS_EXTENSION=%%~dpf%%~nf
+	@rem OLD WAY set djINFILE=%%f
+	@rem OLD WAY set djOUTFILE_MINUS_EXTENSION=%%~dpf%%~nf
 	@rem Full path and filename
-	set djOUTFILE=%%~dpf%%~nf.jxl
+	@rem OLD WAY set djOUTFILE=%%~dpf%%~nf.jxl
+
+	@rem Weird kludges to work around exclamation issues, H/T https://stackoverflow.com/questions/36336518/issue-with-special-characters-in-path-exclamation-point-carrot-etc-using - dj2023-08
+	set FILENAME=%%f
+	setlocal enabledelayedexpansion
+    for %%I in ("!FILENAME!") do endlocal & set djINFILE=%%~I
+
+	if "%djAPPENDEXTENSION%"=="y" (
+		setlocal enabledelayedexpansion
+		for %%I in ("!FILENAME!") do endlocal & set djOUTFILE=%%~dpI%%~nI.png.jxl
+	) else (
+		setlocal enabledelayedexpansion
+		for %%I in ("!FILENAME!") do endlocal & set djOUTFILE=%%~dpI%%~nI.jxl
+	)
+
+	@rem call set /P djOUTFILE_MINUS_EXTENSION=%%~dpf%%~nf<NUL & echo;
+	setlocal enabledelayedexpansion
+	for %%I in ("!FILENAME!") do endlocal & set djOUTFILE_MINUS_EXTENSION=%%~dpI%%~nI
+    @rem for %%I in ("!FILENAME!") do endlocal & set djOUTFILE_MINUS_EXTENSION=%%~dpI%%~nI& echo(___%%I
+
+
+
+	setlocal enabledelayedexpansion
 
 	rem Echo the filename
 	@echo ---------------
 	@echo ---------------
-	@echo CONVERTING !djINFILE! distance !djDISTANCE! to "%%~nf.jxl" ...
-	@echo LOG filename only %%~nf, pathonly "%%~dpf", target "!djOUTFILE!"
+	@echo CONVERTING "!djINFILE!" to "!djOUTFILE!" distance !djDISTANCE! effort !djEFFORT!
+	@rem @echo LOG filename only %%~nf, pathonly "%%~dpf", target "!djOUTFILE!"
 	
     rem Check for zero-byte input file and warn user
     if %%~zf==0 (
@@ -119,6 +176,7 @@ for /r %%f in (*.png) do (
 		exiftool -all -b -s -j "!djINFILE!" > "!djOUTFILE_MINUS_EXTENSION!__pngmetadata.json"
 	)
 
+
 	@rem Call my helper to copy and preserve original file timestamps e.g. create date
 	call copytimestamps.bat "!djINFILE!" "!djOUTFILE!"
 	if "!djMETADATA!"=="y" (
@@ -133,8 +191,8 @@ for /r %%f in (*.png) do (
 	)
 
 	@echo Done "!djINFILE!" to "!djOUTFILE!"
-	@rem exiftool
 	@echo ---------------------------------------------------------
+	endlocal
 )
 
-echo DONE !curdir!
+echo DONE %curdir%

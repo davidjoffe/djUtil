@@ -1,7 +1,7 @@
 param([string]$srcfile="", [string]$destfile="")
 
-Write-Host "SrcFile: $srcfile"
-Write-Host "DestFile: $destfile"
+Write-Host "copytimestamps SrcFile: $srcfile"
+Write-Host "copytimestamps DestFile: $destfile"
 
 $djTmpDate=(Get-ChildItem $srcfile).CreationTime
 Write-Host "CreationTime: $djTmpDate"
