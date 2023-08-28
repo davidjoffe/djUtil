@@ -10,6 +10,10 @@
 @REM )
 
 @echo off
+
+@rem Create local scope for variable names to prevent clashing with other running instances if running in parallel (I think, or somesuch - not 100% sure about this - dj2023-08)
+setlocal
+
 setlocal enabledelayedexpansion
 
 rem Set the codepage to UTF-8

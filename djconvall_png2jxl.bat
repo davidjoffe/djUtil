@@ -9,6 +9,9 @@
 rem Set the codepage to UTF-8
 chcp 65001
 
+@rem Create local scope for variable names to prevent clashing with other running instances if running in parallel (I think, or somesuch - not 100% sure about this - dj2023-08)
+setlocal
+
 @rem setlocal enabledelayedexpansion
 
 @rem set djMETADATA=y
