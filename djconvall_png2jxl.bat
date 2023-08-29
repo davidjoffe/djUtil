@@ -25,6 +25,7 @@ set djNO_OVERWRITE_IFEXISTS=y
 
 @rem If 'y' makes the output extension .png.jxl (in case you want to know later it came from that original png), otherwise just .jxl
 set djAPPENDEXTENSION=n
+set djLISTFIRST=n
 
 @rem cjxl -e effort. By default maximum effort for best file size, lower this value for faster conversion
 @rem 9 means spend most time/CPU to get smallest file
@@ -42,6 +43,8 @@ if "%2"=="" (
 ) else (
 	set djEFFORT=%2
 )
+@rem cjxl "--num_threads=N     Number of worker threads (-1 == use machine default, 0 == do not use multithreading)"
+set djNUMTHREADS=-1
 
 rem Get the current directory
 set curdir=%cd%
@@ -54,15 +57,17 @@ set curdir=%cd%
 @echo djNO_OVERWRITE_IFEXISTS=%djNO_OVERWRITE_IFEXISTS%
 @echo djDISTANCE=%djDISTANCE%
 @echo djEFFORT=%djEFFORT%
+@echo djNUMTHREADS=%djNUMTHREADS%
 @echo FOLDER: %curdir%
 @echo ----------------------------------
-pause
+@rem pause
 
 @echo off
 @rem setlocal  enabledelayedexpansion
 @rem endlocal
 
 @echo --------------- show list of files to do
+if "%djLISTFIRST%"=="y" (
 for /r %%f in (*.png) do (
 	@rem echo echooooooo %%f 
 	@rem Weird kludges to work around exclamation issues, H/T https://stackoverflow.com/questions/36336518/issue-with-special-characters-in-path-exclamation-point-carrot-etc-using - dj2023-08
@@ -86,7 +91,8 @@ for /r %%f in (*.png) do (
 	echo TO FILE: "!djOUTFILE!"
 	endlocal
 )
-pause
+)
+@rem pause
 
 
 
@@ -124,7 +130,7 @@ for /r %%f in (*.png) do (
 	rem Echo the filename
 	@echo ---------------
 	@echo ---------------
-	@echo CONVERTING "!djINFILE!" to "!djOUTFILE!" distance !djDISTANCE! effort !djEFFORT!
+	@echo CONVERTING "!djINFILE!" to "!djOUTFILE!" distance !djDISTANCE! effort !djEFFORT! threads !djNUMTHREADS!
 	@rem @echo LOG filename only %%~nf, pathonly "%%~dpf", target "!djOUTFILE!"
 	
     rem Check for zero-byte input file and warn user
@@ -139,12 +145,12 @@ for /r %%f in (*.png) do (
 		IF EXIST "!djOUTFILE!" (
 			echo SKIPPING EXISTING FILE "!djOUTFILE!"
 		) ELSE (
-			rem Convert the PNG file to a JXL file with maximum effort by default
-			cjxl -d !djDISTANCE! -e !djEFFORT!   "!djINFILE!" "!djOUTFILE!"
+			rem Convert the PNG file to a JXL file with maximum effort by default 
+			cjxl -d !djDISTANCE! -e !djEFFORT! --num_threads=!djNUMTHREADS!    "!djINFILE!" "!djOUTFILE!"
 		)
 	) ELSE (
 		rem Convert the PNG file to a JXL file with maximum effort by default
-		cjxl -d !djDISTANCE! -e !djEFFORT!   "!djINFILE!" "!djOUTFILE!"
+		cjxl -d !djDISTANCE! -e !djEFFORT! --num_threads=!djNUMTHREADS!   "!djINFILE!" "!djOUTFILE!"
 	)
 	rem Keep the EXIF data in the JXL file
 	rem and support utf8 filename
