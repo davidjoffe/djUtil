@@ -19,7 +19,7 @@ for dir in */ ; do
         cd "$dir"
 
         # Execute the command and ignore errors
-        $COMMAND || true
+        $COMMAND "$2"   || true
 
         # Go back to the parent directory
         cd ..
