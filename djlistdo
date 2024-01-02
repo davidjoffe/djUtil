@@ -1,0 +1,37 @@
+#!/bin/bash
+# Copyright (C) David Joffe 2023-2024
+# Almost like jfor.sh but runs the command in each subfolder in list.txt
+
+# Check if a command is passed as a parameter
+if [ -z "$1" ]; then
+    echo "Usage: $0 'command'"
+    exit 1
+fi
+
+# Make sure list.txt exists
+if [ ! -f list.txt ]; then
+    echo "Error: File 'list.txt' not found!"
+    exit 1
+fi
+
+# Store the command from the first parameter but pass along all parameters
+COMMAND="$1"
+# All parameters except first:
+PARAMETERS="${@:2}"
+#PARAMETERS=$2 $3 $4 $5 $6 $7 $8 $9
+
+# Save current folder and restore it at end
+CURRENT_FOLDER=$(pwd)
+
+# Loop through each line in list.txt
+while IFS= read -r line
+do
+    # Run the command in the subfolder
+    #$COMMAND "$line"
+    cd "$line"
+    $COMMAND $PARAMETERS
+done < list.txt
+
+# Restore folder when done
+cd "$CURRENT_FOLDER"
+echo "DONE"
