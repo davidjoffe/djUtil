@@ -26,6 +26,15 @@ CURRENT_FOLDER=$(pwd)
 # Loop through each line in list.txt
 while IFS= read -r line
 do
+    # Display folder name
+    pwd
+
+    # First check if folder exists (if not, skip it)
+    if [ ! -d "$line" ]; then
+        echo "Warning: Folder '$line' not found!"
+        continue
+    fi
+
     # Run the command in the subfolder
     #$COMMAND "$line"
     cd "$line"

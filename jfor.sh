@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright (C) David Joffe 2023-2024
 
 # Check if a command is passed as a parameter
 if [ -z "$1" ]; then
