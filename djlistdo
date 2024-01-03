@@ -2,6 +2,9 @@
 # Copyright (C) David Joffe 2023-2024
 # Almost like jfor.sh but runs the command in each subfolder in list.txt
 
+# % cat listtouse.txt | djlistdo
+# % djlistdo < mylist.txt
+
 # Check if a command is passed as a parameter
 if [ -z "$1" ]; then
     echo "Usage: $0 'command'"
@@ -9,10 +12,10 @@ if [ -z "$1" ]; then
 fi
 
 # Make sure list.txt exists
-if [ ! -f list.txt ]; then
-    echo "Error: File 'list.txt' not found!"
-    exit 1
-fi
+#if [ ! -f list.txt ]; then
+#    echo "Error: File 'list.txt' not found!"
+#    exit 1
+#fi
 
 # Store the command from the first parameter but pass along all parameters
 COMMAND="$1"
@@ -36,11 +39,11 @@ do
     fi
 
     # Run the command in the subfolder
-    #$COMMAND "$line"
     cd "$line"
     $COMMAND $PARAMETERS
-done < list.txt
+    
+    # Restore folder when done
+    cd "$CURRENT_FOLDER"    
+done
 
-# Restore folder when done
-cd "$CURRENT_FOLDER"
 echo "DONE"
