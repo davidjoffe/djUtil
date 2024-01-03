@@ -25,12 +25,20 @@ PARAMETERS="${@:2}"
 
 # Save current folder and restore it at end
 CURRENT_FOLDER=$(pwd)
+# Display start folder name
+pwd
 
 # Loop through each line in list.txt
 while IFS= read -r line
 do
     # Display folder name
-    pwd
+    #pwd
+
+    # If folder name is empty skip it quietly
+    if [ -z "$line" ]; then
+        #echo "Warning: Empty line found!"
+        continue
+    fi
 
     # First check if folder exists (if not, skip it)
     if [ ! -d "$line" ]; then
@@ -40,6 +48,8 @@ do
 
     # Run the command in the subfolder
     cd "$line"
+    #echo "pwd: $(pwd) line: $line: command $COMMAND params $PARAMETERS"
+    echo "===pwd:$(pwd) exec: $COMMAND $PARAMETERS"
     $COMMAND $PARAMETERS
     
     # Restore folder when done
